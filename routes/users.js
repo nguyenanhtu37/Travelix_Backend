@@ -5,6 +5,7 @@ const User = require('../models/User');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
+const {authenticateToken, checkUserRole} = require('../middleware/authenticateToken');
 
 const otpMap = new Map();
 
@@ -95,9 +96,19 @@ router.post('/login', async (req, res) => {
   }
 
   // Tạo token JWT
-  const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '1h' });
+  const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: '1h' });
 
   res.status(200).send({ token });
+});
+
+router.get('/homepageuser', authenticateToken, checkUserRole('user'), (req, res) => {
+  // Code xử lý cho route /homepageuser khi người dùng có role là 'user'
+  res.send('Welcome to homepageuser');
+});
+
+router.get('/admin', authenticateToken, checkUserRole('admin'), (req, res) => {
+  // Code xử lý cho route /admin khi người dùng có role là 'admin'
+  res.send('Welcome to admin');
 });
 
 router.post('/forgot-password', async (req, res) => {
@@ -175,5 +186,15 @@ router.post('/reset-password/:token', async (req, res) => {
   }
 });
 
+// Endpoint to get total number of users
+router.get('/count', async (req, res) => {
+  try {
+    const count = await User.countDocuments(); // Count total users
+    res.json({ count });
+  } catch (err) {
+    console.error('Error fetching user count:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 
 module.exports = router;
