@@ -186,14 +186,21 @@ router.post('/reset-password/:token', async (req, res) => {
   }
 });
 
-// Endpoint to get total number of users
-router.get('/count', async (req, res) => {
+router.get('/user-count', async (req, res) => {
   try {
-    const count = await User.countDocuments(); // Count total users
-    res.json({ count });
+    const userCount = await User.countDocuments();
+    res.status(200).json({ count: userCount });
   } catch (err) {
-    console.error('Error fetching user count:', err);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ message: err.message });
+  }
+});
+
+router.get('/getall', async (req, res) => {
+  try {
+    const users = await User.find();
+    res.json(users);
+  } catch (err) {
+    res.status(500).send(err);
   }
 });
 
