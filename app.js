@@ -7,6 +7,7 @@ const jsonwebtoken = require('jsonwebtoken');
 const destinationsRouter = require('./routes/destinations');
 const hotelsRouter = require('./routes/hotels');
 const usersRouter = require('./routes/users');
+const carRouter = require('./routes/carRouter');
 
 const app = express();
 const PORT = 5000;
@@ -32,6 +33,7 @@ db.once('open', () => {
 app.use('/api/destinations', destinationsRouter);
 app.use('/api/hotels', hotelsRouter);
 app.use('/api/users', usersRouter);
+app.use('/api/cars', carRouter);
 
 // Start server
 app.listen(PORT, () => {

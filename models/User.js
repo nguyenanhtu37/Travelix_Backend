@@ -6,6 +6,7 @@ const userSchema = new mongoose.Schema({
     password: String,
     confirmpassword: String,
     phone: String,
+    isAdmin: Boolean,
     resetPasswordToken: String,
     resetPasswordExpires: Date,
 });
