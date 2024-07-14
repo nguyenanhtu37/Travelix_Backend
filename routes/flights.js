@@ -5,7 +5,7 @@ const Flight = require('../models/Flight');
 // GET all popular hotels
 router.get('/', async (req, res) => {
     try {
-        const flights = await Flight.find({ isActive: true });
+        const flights = await Flight.find(); // Xóa isActive: true
         res.json(flights);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -43,11 +43,9 @@ router.put('/:filghtId', async (req, res) => {
 });
 router.delete('/:flightId', async (req, res) => {
     try {
-        const flight = await Flight.findById(req.params.flightId);
+        const flight = await Flight.findByIdAndDelete(req.params.flightId);
         if (flight) {
-            flight.isActive = false; // Đánh dấu isActive là false thay vì xóa
-            await flight.save();
-            res.json({ message: 'Flight marked as inactive' });
+            res.json({ message: 'Flight deleted successfully' });
         } else {
             res.status(404).json({ message: 'Flight not found' });
         }

@@ -7,11 +7,8 @@ const jsonwebtoken = require('jsonwebtoken');
 const destinationsRouter = require('./routes/destinations');
 const hotelsRouter = require('./routes/hotels');
 const usersRouter = require('./routes/users');
-<<<<<<< HEAD
 const carRouter = require('./routes/carRouter');
-=======
 const flightsRouter = require('./routes/flights')
->>>>>>> 851b8e38f0687da86760a39933301c8ea0ccf556
 
 const app = express();
 const PORT = 5000;
@@ -37,11 +34,8 @@ db.once('open', () => {
 app.use('/api/destinations', destinationsRouter);
 app.use('/api/hotels', hotelsRouter);
 app.use('/api/users', usersRouter);
-<<<<<<< HEAD
 app.use('/api/cars', carRouter);
-=======
 app.use('/api/flights', flightsRouter);
->>>>>>> 851b8e38f0687da86760a39933301c8ea0ccf556
 
 // Start server
 app.listen(PORT, () => {
