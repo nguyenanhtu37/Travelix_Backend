@@ -20,6 +20,15 @@ router.get('/:filghtId', async (req, res) => {
     res.status(500).send(err);
   }
 });
+router.get('/choose/:filghtId', async (req, res) => {
+  try {
+    const filght = await Flight.findById(req.params.filghtId);
+    if (!filght ) return res.status(404).send('Flight not found');
+    res.json(filght);
+  } catch (err) {
+    res.status(500).send(err);
+  }
+});
 router.post('/add', async (req, res) => {
   try {
     const flight = new Flight(req.body);
@@ -52,5 +61,23 @@ router.delete('/:flightId', async (req, res) => {
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
+});
+router.get('/search', async (req, res) => {
+  try {
+    const { from, to } = req.query;
+    console.log(`Query params - from: ${from}, to: ${to}`); // Log query parameters
+
+    const filter = {};
+    if (from) filter.from = decodeURIComponent(from);
+    if (to) filter.to = decodeURIComponent(to);
+
+    console.log(`Filter object: ${JSON.stringify(filter)}`); // Log filter object
+
+    const flights = await Flight.find(filter);
+    res.json(flights);
+  } catch (err) {
+    console.error('Error fetching flights:', err); // Log the error for debugging
+    res.status(500).json({ message: err.message });
+  }
 });
 module.exports = router;

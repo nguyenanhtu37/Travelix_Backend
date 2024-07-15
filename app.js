@@ -9,6 +9,7 @@ const hotelsRouter = require('./routes/hotels');
 const usersRouter = require('./routes/users');
 const carRouter = require('./routes/carRouter');
 const flightsRouter = require('./routes/flights')
+const orderFlightRouter = require('./routes/orderFlight')
 
 const app = express();
 const PORT = 5000;
@@ -36,6 +37,7 @@ app.use('/api/hotels', hotelsRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/cars', carRouter);
 app.use('/api/flights', flightsRouter);
+app.use('/api/orderflight', orderFlightRouter);
 
 // Start server
 app.listen(PORT, () => {
