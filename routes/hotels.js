@@ -16,4 +16,15 @@ router.get('/', async (req, res) => {
     }
 });
 
+// Endpoint to get total number of hotels
+router.get('/count', async (req, res) => {
+    try {
+      const count = await Hotel.countDocuments();
+      res.json({ count });
+    } catch (err) {
+      console.error('Error fetching hotel count:', err);
+      res.status(500).json({ error: 'Server error' });
+    }
+  });
+
 module.exports = router;
