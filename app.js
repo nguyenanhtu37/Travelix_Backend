@@ -9,10 +9,7 @@ const hotelsRouter = require('./routes/hotels');
 const usersRouter = require('./routes/users');
 const carRouter = require('./routes/carRouter');
 const flightsRouter = require('./routes/flights')
-<<<<<<< HEAD
-=======
 const orderFlightRouter = require('./routes/orderFlight')
->>>>>>> 910177e0848c308ab3f07ca08edb7665ed27fc8d
 
 const app = express();
 const PORT = 5000;
@@ -40,11 +37,8 @@ app.use('/api/hotels', hotelsRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/cars', carRouter);
 app.use('/api/flights', flightsRouter);
-<<<<<<< HEAD
 
-=======
 app.use('/api/orderflight', orderFlightRouter);
->>>>>>> 910177e0848c308ab3f07ca08edb7665ed27fc8d
 
 // Start server
 app.listen(PORT, () => {
