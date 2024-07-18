@@ -102,32 +102,6 @@ router.post('/create_payment_url', async (req, res) => {
 
     console.log('Generated payment URL:', paymentUrl);
 
-    await OrderFlight.findByIdAndUpdate(orderId, { status: 'Paid' });
-
-    // Send confirmation email
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: 'nguyenanhtu3703@gmail.com',
-        pass: 'ietj qlee vvwb dtce' // Thay bằng mật khẩu của bạn
-      }
-    });
-
-    const mailOptions = {
-      from: 'nguyenanhtu3703@gmail.com',
-      to: order.contactInfo.email,
-      subject: 'Payment Confirmation',
-      text: `Your payment for order ${orderId} was successful. Thank you!`
-    };
-
-    transporter.sendMail(mailOptions, (error, info) => {
-      if (error) {
-        console.error('Error sending confirmation email:', error);
-      } else {
-        console.log('Email sent: ' + info.response);
-      }
-    });
-
     res.json({ paymentUrl });
   } catch (error) {
     console.error('Error creating payment URL:', error);
