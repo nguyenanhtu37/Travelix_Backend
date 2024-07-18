@@ -41,37 +41,42 @@ const moment = require('moment'); // Import moment
   }
 
   // Utility function to sort object keys
+// Định nghĩa route POST để tạo URL thanh toán
 router.post('/create_payment_url', async (req, res) => {
-  process.env.TZ = 'Asia/Ho_Chi_Minh';
+  process.env.TZ = 'Asia/Ho_Chi_Minh'; // Thiết lập múi giờ cho server
 
   const { orderId, bankCode, orderDescription, orderType, language } = req.body;
 
   try {
-    console.log('Received orderId:', orderId);
+    console.log('Received orderId:', orderId); // In ra console để kiểm tra orderId nhận được
 
+    // Tìm kiếm đơn hàng bằng orderId
     const order = await OrderFlight.findById(orderId);
     if (!order) {
-      console.error('Order not found for orderId:', orderId);
-      return res.status(404).send('Order not found');
+      console.error('Order not found for orderId:', orderId); // In ra lỗi nếu không tìm thấy đơn hàng
+      return res.status(404).send('Order not found'); // Trả về lỗi 404 nếu không tìm thấy đơn hàng
     }
 
+    // Lấy địa chỉ IP của client
     const ipAddr =
       req.headers['x-forwarded-for'] ||
       req.connection.remoteAddress ||
       req.socket.remoteAddress ||
       req.connection.socket.remoteAddress;
 
+    // Lấy các thông tin cấu hình cho VNPay từ file cấu hình
     const tmnCode = config.get('vnp_TmnCode');
     const secretKey = config.get('vnp_HashSecret');
     const vnpUrl = config.get('vnp_Url');
     const returnUrl = config.get('vnp_ReturnUrl');
 
     const date = new Date();
-    const createDate = moment(date).format('YYYYMMDDHHmmss'); // Sử dụng moment cho định dạng ngày tháng
-    const orderTxnRef = orderId.toString();
-    const amount = order.totalPrice;
-    const locale = language || 'vn';
+    const createDate = moment(date).format('YYYYMMDDHHmmss'); // Sử dụng moment để định dạng ngày giờ
+    const orderTxnRef = orderId.toString(); // Chuyển orderId thành chuỗi
+    const amount = order.totalPrice; // Lấy tổng giá trị đơn hàng
+    const locale = language || 'vn'; // Thiết lập ngôn ngữ (mặc định là 'vn')
 
+    // Tạo đối tượng vnp_Params với các tham số cần thiết
     let vnp_Params = {
       vnp_Version: '2.1.0',
       vnp_Command: 'pay',
@@ -81,31 +86,34 @@ router.post('/create_payment_url', async (req, res) => {
       vnp_TxnRef: orderTxnRef,
       vnp_OrderInfo: orderDescription,
       vnp_OrderType: orderType,
-      vnp_Amount: amount * 100, // Ví dụ: chuyển đổi thành tiền tệ VNĐ
+      vnp_Amount: amount * 100, // Chuyển đổi thành tiền tệ VNĐ
       vnp_ReturnUrl: returnUrl,
       vnp_IpAddr: ipAddr,
       vnp_CreateDate: createDate,
     };
 
+    // Thêm mã ngân hàng nếu có
     if (bankCode) {
       vnp_Params.vnp_BankCode = bankCode;
     }
 
+    // Sắp xếp các thuộc tính của đối tượng theo thứ tự bảng chữ cái
     vnp_Params = sortObject(vnp_Params);
 
+    // Tạo chữ ký HMAC SHA512 để bảo mật dữ liệu
     const signData = querystring.stringify(vnp_Params, { encode: false });
     const hmac = crypto.createHmac('sha512', secretKey);
     const signed = hmac.update(Buffer.from(signData, 'utf-8')).digest('hex');
 
-    vnp_Params.vnp_SecureHash = signed;
-    const paymentUrl = `${vnpUrl}?${querystring.stringify(vnp_Params, { encode: false })}`;
+    vnp_Params.vnp_SecureHash = signed; // Thêm chữ ký vào tham số
+    const paymentUrl = `${vnpUrl}?${querystring.stringify(vnp_Params, { encode: false })}`; // Tạo URL thanh toán
 
-    console.log('Generated payment URL:', paymentUrl);
+    console.log('Generated payment URL:', paymentUrl); // In ra URL thanh toán đã tạo
 
-    res.json({ paymentUrl });
+    res.json({ paymentUrl }); // Trả về URL thanh toán cho client
   } catch (error) {
-    console.error('Error creating payment URL:', error);
-    res.status(500).send('Internal Server Error');
+    console.error('Error creating payment URL:', error); // In ra lỗi nếu có
+    res.status(500).send('Internal Server Error'); // Trả về lỗi 500 nếu có lỗi xảy ra
   }
 });
 
@@ -116,7 +124,7 @@ router.get('/vnpay_return', async (req, res) => {
   try {
     // Xử lý phản hồi từ VNPay
     if (vnp_ResponseCode === '00') {
-      // Thanh toán thành công, cập nhật trạng thái đơn hàng
+      // Nếu thanh toán thành công, cập nhật trạng thái đơn hàng
       const updatedOrder = await OrderFlight.findByIdAndUpdate(
         vnp_TxnRef, // Đảm bảo rằng vnp_TxnRef là _id của đơn hàng
         { $set: { status: 'paid' } },
@@ -124,8 +132,8 @@ router.get('/vnpay_return', async (req, res) => {
       );
 
       if (!updatedOrder) {
-        console.error('Failed to update order status after successful payment');
-        return res.status(500).send('Internal Server Error');
+        console.error('Failed to update order status after successful payment'); // In ra lỗi nếu không cập nhật được trạng thái đơn hàng
+        return res.status(500).send('Internal Server Error'); // Trả về lỗi 500 nếu không cập nhật được trạng thái đơn hàng
       }
 
       // Gửi email xác nhận hoặc thực hiện các hành động phù hợp
@@ -134,12 +142,12 @@ router.get('/vnpay_return', async (req, res) => {
       // Chuyển hướng đến trang thành công trên frontend
       return res.redirect(`http://localhost:3001/paymentflightsuccess?orderId=${vnp_TxnRef}`);
     } else {
-      // Thanh toán thất bại, xử lý tương ứng (chuyển hướng đến trang thất bại)
+      // Nếu thanh toán thất bại, xử lý tương ứng (chuyển hướng đến trang thất bại)
       return res.redirect(`http://localhost:3001/paymentflightfailure?orderId=${vnp_TxnRef}`);
     }
   } catch (error) {
-    console.error('Error handling VNPay return:', error);
-    return res.status(500).send('Internal Server Error');
+    console.error('Error handling VNPay return:', error); // In ra lỗi nếu có
+    return res.status(500).send('Internal Server Error'); // Trả về lỗi 500 nếu có lỗi xảy ra
   }
 });
 
@@ -150,6 +158,7 @@ function sortObject(obj) {
     return result;
   }, {});
 }
+
 // Function to send confirmation email
 async function sendOrderConfirmationEmail(order) {
   try {
